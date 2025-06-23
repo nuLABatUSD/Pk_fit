@@ -3,3 +3,5 @@ __pycache__
 Untitled*
 .ipynb_checkpoints
 .DS_Store
+*.pdf
+*.png
