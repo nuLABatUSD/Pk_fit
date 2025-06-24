@@ -1275,7 +1275,7 @@ int background_ncdm_distribution(
     /*    FERMI-DIRAC INCLUDING CHEMICAL POTENTIALS   */
     /**************************************************/
 
-    *f0 = 1.0/pow(2*_PI_,3)*(1./(exp(q-ksi)+1.) +1./(exp(q+ksi)+1.));
+    //*f0 = 1.0/pow(2*_PI_,3)*(1./(exp(q-ksi)+1.) +1./(exp(q+ksi)+1.));
 
     /**************************************************/
 
@@ -1284,6 +1284,23 @@ int background_ncdm_distribution(
         eigenstates, not mass eigenstates. It is easy to take this into
         account by introducing the mixing angles. In the later part
         (not read by the code) we illustrate how to do this. */
+        
+    /***************************************************************/
+    /*   Fitting form, requires seven inputs:                      */
+    /*   T, N: an effective thermal temperature and normalization  */
+    /*   A, B, C, D, E: a quartic exponential fit for the residual */
+    /***************************************************************/
+         
+        
+    double T = param[0];
+    double N = param[1];
+    double A = param[2];
+    double B = param[3];
+    double C = param[4];
+    double D = param[5];
+    double E = param[6];
+    
+    *f0 = 2.0*(N/(exp(q/T)+1) + exp(A*pow(q,4)+B*pow(q,3)+C*pow(q,2)+D*q+E))/pow(2*_PI_,3);    
 
     if (_FALSE_) {
 

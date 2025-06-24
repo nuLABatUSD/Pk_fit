@@ -5,3 +5,5 @@ Untitled*
 .DS_Store
 *.pdf
 *.png
+*.npy
+RMFK_Results
