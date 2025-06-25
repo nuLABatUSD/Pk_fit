@@ -11,6 +11,7 @@ def binaries_directory():
     import site
     """Return the installation directory, or None"""
     user_install = decide_user_install(use_user_site = True if ('--user' in sys.argv) else None, prefix_path = any(['--prefix' in x for x in sys.argv]), target_dir=any(['--target' in x for x in sys.argv]), root_path = None, isolated_mode = True if ('--no-build-isolation' in sys.argv) else None)
+    user_install = False
 
     if user_install:
         paths = (site.getusersitepackages(),)
