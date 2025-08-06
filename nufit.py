@@ -124,6 +124,15 @@ def finale(e_array,f_array,poly_degree):
     
     return T,N,poly_coefficients
 
+def new_finale(e_array,f_array):
+    e,f = cdf_array(e_array,f_array)
+    D = 0.8737373737373738
+    B = 0.03015075376884422
+    arr = [B, 1/D, 0, 0, 0]
+    T,N,poly_coefficients = everything_poly(e, f, 4)
+    
+    return T,N,arr
+
 def cdf_array(e_array,f_array):
     high = np.where(cdf_faster(e_array,e_array**2*f_array)>1-10**-4)[0][0]
     
@@ -221,7 +230,7 @@ def v_masses_sterile(m_small, normal, in_filename, save_filename, make_plot = Fa
     
     mass1, mass2, mass3 = v_masses(m_small, normal)
                                    
-    T_best, N_best, coefficients = finale(e_array, f_array, 4)
+    T_best, N_best, coefficients = new_finale(e_array, f_array)
     
     params = '{},{},{},{},{},{},{}'.format(T_best, N_best, coefficients[0], coefficients[1], coefficients[2], coefficients[3], coefficients[4])
     
