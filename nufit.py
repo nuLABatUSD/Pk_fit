@@ -2,9 +2,12 @@ import numpy as np
 from classy import Class
 import numba as nb
 import matplotlib.pyplot as plt
+from scipy.integrate import quad
+from scipy.special import zeta
 
 delta_msq_solar = 0.002458
 delta_msq_atm = 0.000074
+zeta3 = zeta(3)
 
 def v_masses(m_small, normal):
     delta_m21_sq = delta_msq_atm
@@ -124,14 +127,82 @@ def finale(e_array,f_array,poly_degree):
     
     return T,N,poly_coefficients
 
+t_range = np.linspace(1, 1.6, 200)
+b_range = np.linspace(0, 2, 200)
+d_range = np.linspace(2.5/3, 4/3, 200)
+    
+
+def norm(T, b_prime):
+    result = (T**3 * (3/2) * zeta3) + b_prime
+    return result
+
+
+def cdf_fit(x, T, b_prime):
+
+    def thermal(eps, T):
+        return eps**2 / (np.exp(eps/T) + 1) 
+        
+    num, err = quad(lambda eps: thermal(eps, T), 0, x)
+    denom = norm(T, b_prime)
+
+    return num/denom
+    
+
+def find_coeff(eps, cdf_data, T_values, B_values):
+    ks = np.zeros((len(T_values), len(B_values)))
+                  
+    for i, t in enumerate(T_values):
+        for j, b in enumerate(B_values):
+            cdf_fit_model = [cdf_fit(x, t, b) for x in eps]
+            ks_val  = np.max(np.abs(cdf_fit_model - cdf_data))
+            ks[i, j] = ks_val
+
+    min_index = np.unravel_index(np.argmin(ks), ks.shape)
+    best_t = T_values[min_index[0]]
+    best_b = B_values[min_index[1]]
+
+    return best_t, best_b
+
+
+def bfunc_fit(x, frac, d):
+    return (frac * (1/6) * (6 - ((x/d)**3 + 3 * (x/d)**2 + 6 * (x/d) + 6) * np.exp(-x/d)))
+
+
+def find_d(eps, frac, bfunct, d_vals):
+    best_d = np.zeros(len(d_vals))
+                  
+    for i, d in enumerate(d_vals):
+        bfunc_fitt = [bfunc_fit(x, frac, d) for x in eps]
+        ks_val  = np.max(np.abs(bfunc_fitt - bfunct))
+        best_d[i] = ks_val
+
+    min_index = np.unravel_index(np.argmin(best_d), best_d.shape)
+    best_D = d_vals[min_index]
+        
+    return best_D
+
+def find_N(e, f, T, B, D):
+    integrand = f * e**3
+    integral = np.trapz(integrand, e)
+    dividend = ((7 * np.pi**4 * T**4)/120) + (B * 4 * D)
+    N = integral/dividend
+
+    return N
+
 def new_finale(e_array,f_array):
     e,f = cdf_array(e_array,f_array)
-    D = 0.8737373737373738
-    B = 0.03015075376884422
+    cdf = cdf_faster(e,f)
+    T, B = find_coeff(e, cdf, t_range, b_range)
+    
+    fraction = B/norm(T, B) 
+    delta_cdf = cdf - (cdf*norm(T,0)/norm(T, B))
+    
+    D = find_d(e, fraction, delta_cdf, d_range)
+    N = find_N(e, f, T, B, D)
     arr = [B, 1/D, 0, 0, 0]
-    T,N,poly_coefficients = everything_poly(e, f, 4)
     
     return T,N,arr
+
 
 def cdf_array(e_array,f_array):
     high = np.where(cdf_faster(e_array,e_array**2*f_array)>1-10**-4)[0][0]

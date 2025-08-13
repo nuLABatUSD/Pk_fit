@@ -1291,13 +1291,11 @@ int background_ncdm_distribution(
     /*   A, B, C, D, E: a quartic exponential fit for the residual */
     /***************************************************************/
          
-    /*    
+      /*    
     double T = param[0];
     double N = param[1];
     double A = param[2];
-    double B = param[3];
-    double C = param[4];
-    double D = param[5];
+@@ -1301,28 +1301,40 @@
     double E = param[6];
     
     *f0 = 2.0*(N/(exp(q/T)+1) + exp(A*pow(q,4)+B*pow(q,3)+C*pow(q,2)+D*q+E))/pow(2*_PI_,3);    
@@ -1309,7 +1307,7 @@ int background_ncdm_distribution(
     double D = param[3];
 
     *f0 = 1./(exp(q/T)+1);
-    *f0 += B * q * (1/D) * exp((-q/D));
+    *f0 += B * q * (1/6) * pow(D, 4) * exp((-q*D));
     *f0 *= N;
     *f0 *= 2./pow(2*_PI_, 3);
     
@@ -3027,4 +3025,4 @@ double ddV_scf(
                struct background *pba,
                double phi) {
   return ddV_e_scf(pba,phi)*V_p_scf(pba,phi) + 2*dV_e_scf(pba,phi)*dV_p_scf(pba,phi) + V_e_scf(pba,phi)*ddV_p_scf(pba,phi);
-}
+}                            
