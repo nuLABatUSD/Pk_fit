@@ -148,9 +148,9 @@ def cdf_fit(x, T, b_prime):
     return num/denom
     
 
-def find_coeff(eps, cdf_data, T_values, B_values):
+def find_coeff(eps, cdf_data, T_values, B_values, t_range = None):
     ks = np.zeros((len(T_values), len(B_values)))
-                  
+    
     for i, t in enumerate(T_values):
         for j, b in enumerate(B_values):
             cdf_fit_model = [cdf_fit(x, t, b) for x in eps]
@@ -189,15 +189,31 @@ def find_N(e, f, T, B, D):
 
     return N
 
-def new_finale(e_array,f_array):
+def new_finale(e_array,f_array,t = None, b = None, d = None):
     e,f = cdf_array(e_array,f_array)
     cdf = cdf_faster(e,f)
-    T, B = find_coeff(e, cdf, t_range, b_range)
+
+    if t is not None:
+        t_val = t
+    else:
+        t_val = t_range
+
+    if b is not None:
+        b_val = b
+    else:
+        b_val = b_range
+
+    if d is not None:
+        d_val = d
+    else:
+        d_val = d_range
+        
+    T, B = find_coeff(e, cdf, t_val, b_val)
     
     fraction = B/norm(T, B) 
     delta_cdf = cdf - (cdf*norm(T,0)/norm(T, B))
     
-    D = find_d(e, fraction, delta_cdf, d_range)
+    D = find_d(e, fraction, delta_cdf, d_val)
     N = find_N(e, f, T, B, D)
     arr = [B, 1/D, 0, 0, 0]
     
@@ -294,14 +310,34 @@ def fit3(e_array,f_array):
     return T_best,N_best
     
     
-def v_masses_sterile(m_small, normal, in_filename, save_filename, make_plot = False, sum_mnu_filename = False):
+def v_masses_sterile(m_small, normal, in_filename, save_filename, make_plot = False, sum_mnu_filename = False, coeffs = False, parameter = None, bprime = None, d = None):
     actual_data = np.load(in_filename, allow_pickle=True)
     f_array = actual_data['fe'][-1]
     e_array = actual_data['e'][-1]
     
     mass1, mass2, mass3 = v_masses(m_small, normal)
-                                   
-    T_best, N_best, coefficients = new_finale(e_array, f_array)
+
+    if parameter is None:
+        T_best, N_best, coefficients = new_finale(e_array, f_array)
+
+    else:
+        ts = np.linspace(parameter-(parameter*0.0001), parameter, 200)
+        T_best, N_best, coefficients = new_finale(e_array, f_array, ts)
+
+    if bprime is None:
+        T_best, N_best, coefficients = new_finale(e_array, f_array)
+
+    else:
+        bs = np.linspace(bprime-(bprime*0.0001), bprime, 200)
+        T_best, N_best, coefficients = new_finale(e_array, f_array, t = None, b = bs)
+
+    if d is None:
+        T_best, N_best, coefficients = new_finale(e_array, f_array)
+
+    else:
+        ds = np.linspace(d-(d*0.0001), d, 200)
+        T_best, N_best, coefficients = new_finale(e_array, f_array, t = None, b = None, d = d)
+
     
     params = '{},{},{},{},{},{},{}'.format(T_best, N_best, coefficients[0], coefficients[1], coefficients[2], coefficients[3], coefficients[4])
     
@@ -352,6 +388,9 @@ def v_masses_sterile(m_small, normal, in_filename, save_filename, make_plot = Fa
         plt.xlabel(r'$k \,\,\,\, [h/\mathrm{Mpc}]$')
         plt.ylabel(r'$\Delta P / P$')
         plt.show()
+
+    if(coeffs):
+        return T_best, N_best, coefficients[0], coefficients[1]
 
     
     
